@@ -1,0 +1,142 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer 
+  
+  Created: Sat Aug 12 01:40:47 PDT 2023
+  Author:  hp
+  Type: BPEL 2.0 Process
+  Purpose: Synchronous BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="ChunkeReadBPELProcess"
+               targetNamespace="http://xmlns.oracle.com/FirstApplication/ChunkedReadDemo/ChunkeReadBPELProcess"
+               xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+               xmlns:client="http://xmlns.oracle.com/FirstApplication/ChunkedReadDemo/ChunkeReadBPELProcess"
+               xmlns:ora="http://schemas.oracle.com/xpath/extension"
+               xmlns:ui="http://xmlns.oracle.com/soa/designer"
+               xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+         xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+         xmlns:ns1="http://xmlns.oracle.com/pcbpel/adapter/file/FirstApplication/ChunkedReadDemo/filechunckedRead"
+         xmlns:oraext="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.ExtFunc"
+         xmlns:bpm="http://xmlns.oracle.com/bpmn20/extensions"
+         xmlns:xp20="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.Xpath20"
+         xmlns:ess="http://xmlns.oracle.com/scheduler" xmlns:hwf="http://xmlns.oracle.com/bpel/workflow/xpath"
+         xmlns:xref="http://www.oracle.com/XSL/Transform/java/oracle.tip.xref.xpath.XRefXPathFunctions"
+         xmlns:dvm="http://www.oracle.com/XSL/Transform/java/oracle.tip.dvm.LookupValue"
+         xmlns:bpws="http://schemas.xmlsoap.org/ws/2003/03/business-process/"
+         xmlns:xdk="http://schemas.oracle.com/bpel/extension/xpath/function/xdk"
+         xmlns:ids="http://xmlns.oracle.com/bpel/services/IdentityService/xpath"
+         xmlns:ldap="http://schemas.oracle.com/xpath/extension/ldap">
+
+    <import ui:processWSDL="true" namespace="http://xmlns.oracle.com/FirstApplication/ChunkedReadDemo/ChunkeReadBPELProcess" location="../WSDLs/ChunkeReadBPELProcess.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+    <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        PARTNERLINKS                                                      
+        List of services participating in this BPEL process               
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    --> 
+  <partnerLinks>
+    <!-- 
+      The 'client' role represents the requester of this service. It is 
+      used for callback. The location and correlation information associated
+      with the client role are automatically set using WS-Addressing.
+    -->
+    <partnerLink name="chunkereadbpelprocess_client" partnerLinkType="client:ChunkeReadBPELProcess" myRole="ChunkeReadBPELProcessProvider"/>
+    <partnerLink name="filechunckedRead" partnerLinkType="ns1:ChunkedRead_plt" partnerRole="ChunkedRead_role"/>
+  </partnerLinks>
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      VARIABLES                                                        
+      List of messages and XML documents used within this BPEL process 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <variables>
+    <!-- Reference to the message passed as input during initiation -->
+    <variable name="inputVariable" messageType="client:ChunkeReadBPELProcessRequestMessage"/>
+
+    <!-- Reference to the message that will be returned to the requester-->
+    <variable name="outputVariable" messageType="client:ChunkeReadBPELProcessResponseMessage"/>
+    <variable name="FileName" type="xsd:string"/>
+    <variable name="inVarLineNumber" type="xsd:string"/>
+    <variable name="inVarColumnNumber" type="xsd:string"/>
+    <variable name="outVarIsEOF" type="xsd:string"/>
+    <variable name="outVarLineNumber" type="xsd:string"/>
+    <variable name="outVarColumnNumber" type="xsd:string"/>
+    <variable name="Invoke1_ChunkedRead_InputVariable" messageType="ns1:Empty_msg"/>
+    <variable name="Invoke1_ChunkedRead_OutputVariable" messageType="ns1:ChunkedRead_msg"/>
+  </variables>
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     ORCHESTRATION LOGIC                                               
+     Set of activities coordinating the flow of messages across the    
+     services integrated within this business process                  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <sequence name="main">
+
+    <!-- Receive input from requestor. (Note: This maps to operation defined in ChunkeReadBPELProcess.wsdl) -->
+    <receive name="receiveInput" partnerLink="chunkereadbpelprocess_client" portType="client:ChunkeReadBPELProcess" operation="process" variable="inputVariable" createInstance="yes"/>
+    <assign name="AssignProperties">
+      <copy>
+        <from>$inputVariable.payload/client:input</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$FileName</to>
+      </copy>
+      <copy>
+        <from>1</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inVarColumnNumber</to>
+      </copy>
+      <copy>
+        <from>'false'</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outVarIsEOF</to>
+      </copy>
+      <copy>
+        <from>1</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inVarLineNumber</to>
+      </copy>
+    </assign><while name="While_Loop" xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+      <condition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outVarIsEOF='false'</condition>
+      
+   <sequence name="Sequence1"><invoke name="InvokeSynCRead" partnerLink="filechunckedRead"
+                                      portType="ns1:ChunkedRead_ptt" operation="ChunkedRead"
+                                      inputVariable="Invoke1_ChunkedRead_InputVariable"
+                                      outputVariable="Invoke1_ChunkedRead_OutputVariable" bpelx:invokeAsDetail="no"
+                                      xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+                                      xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+      <bpelx:toProperties>
+         <bpelx:toProperty name="jca.file.FileName" variable="FileName"/>
+         <bpelx:toProperty name="jca.file.LineNumber" variable="inVarLineNumber"/>
+         <bpelx:toProperty name="jca.file.ColumnNumber" variable="inVarColumnNumber"/>
+      </bpelx:toProperties>
+      <bpelx:fromProperties>
+         <bpelx:fromProperty name="jca.file.IsEOF" variable="outVarIsEOF"/>
+         <bpelx:fromProperty name="jca.file.LineNumber" variable="outVarLineNumber"/>
+         <bpelx:fromProperty name="jca.file.ColumnNumber" variable="outVarColumnNumber"/>
+      </bpelx:fromProperties>
+   </invoke><assign name="UpdateLoop">
+         <copy>
+            <from>$outVarIsEOF</from>
+            <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outVarIsEOF</to>
+         </copy>
+         <copy>
+            <from>$outVarLineNumber</from>
+            <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inVarLineNumber</to>
+         </copy>
+         <copy>
+            <from>$outVarColumnNumber</from>
+            <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inVarColumnNumber</to>
+         </copy>
+      </assign></sequence></while>
+    <assign name="Assign1">
+      <copy>
+        <from>'Sucess'</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.payload/client:result</to>
+      </copy>
+    </assign>
+    <!-- Generate reply to synchronous request -->
+    <reply name="replyOutput" partnerLink="chunkereadbpelprocess_client" portType="client:ChunkeReadBPELProcess" operation="process" variable="outputVariable"/>
+  </sequence>
+</process>

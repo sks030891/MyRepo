@@ -1,0 +1,13 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Faults>
+   <Fault>
+      <severity>error</severity>
+      <loc>/ns:composite/ns:reference[@name='dbService']</loc>
+      <line>18</line>
+      <col>70</col>
+      <file>C:\JDeveloper\mywork\FirstApplication\DBConnect\SOA\composite.xml</file>
+      <name>C:\JDeveloper\mywork\FirstApplication\DBConnect\SOA\composite.xml</name>
+      <fix/>
+      <msg>Reference dbService does not exist as wire target</msg>
+   </Fault>
+</Faults>

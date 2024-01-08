@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:pipelineEntry xmlns:con="http://www.bea.com/wli/sb/pipeline/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <con:coreEntry>
+        <con:binding type="SOAP" isSoap12="false" xsi:type="con:SoapBindingType">
+            <con:wsdl ref="SBProject/EH_Pipeline"/>
+            <con:binding>
+                <con:name>execute_bind</con:name>
+                <con:namespace>http://xmlns.oracle.com/ServiceBusApplication2/SBProject/EH_Pipeline</con:namespace>
+            </con:binding>
+        </con:binding>
+        <con:xqConfiguration>
+            <con:snippetVersion>1.0</con:snippetVersion>
+        </con:xqConfiguration>
+    </con:coreEntry>
+    <con:router>
+        <con:pipeline type="request" name="request-N3f57fef8.N663aa110.0.189f52e4de4.N8000">
+            <con:stage id="_StageId-N3f57fef8.N663aa110.0.189f52e4de4.N7ffe" name="RaiseErrorStage" errorHandler="error-N3f57fef8.N663aa110.0.189f52e4de4.N7ffc">
+                <con:context/>
+                <con:actions>
+                    <con1:validate xmlns:con1="http://www.bea.com/wli/sb/stages/transform/config">
+                        <con2:id xmlns:con2="http://www.bea.com/wli/sb/stages/config">_ActionId-N3f57fef8.N663aa110.0.189f52e4de4.N7ff8</con2:id>
+                        <con2:disabled xmlns:con2="http://www.bea.com/wli/sb/stages/config">true</con2:disabled>
+                        <con1:schema ref="SBProject/Schemas/untitled1"/>
+                        <con1:schemaElement xmlns:exam="http://www.example.org">exam:exampleElement</con1:schemaElement>
+                        <con1:varName>body</con1:varName>
+                        <con1:location>
+                            <con2:xpathText xmlns:con2="http://www.bea.com/wli/sb/stages/config">.</con2:xpathText>
+                        </con1:location>
+                    </con1:validate>
+                    <con1:Error xmlns:con1="http://www.bea.com/wli/sb/stages/transform/config">
+                        <con2:id xmlns:con2="http://www.bea.com/wli/sb/stages/config">_ActionId-N3f57fef8.N663aa110.0.189f52e4de4.N7fef</con2:id>
+                        <con1:errCode>101x</con1:errCode>
+                        <con1:message>Custom Fault has occured</con1:message>
+                    </con1:Error>
+                </con:actions>
+            </con:stage>
+        </con:pipeline>
+        <con:pipeline type="response" name="response-N3f57fef8.N663aa110.0.189f52e4de4.N7fff">
+            <con:stage id="_StageId-N3f57fef8.N663aa110.0.189f52e4de4.N7ffd" name="Stage1">
+                <con:context/>
+                <con:actions/>
+            </con:stage>
+        </con:pipeline>
+        <con:pipeline type="error" name="error-N3f57fef8.N663aa110.0.189f52e4de4.N7ffc">
+            <con:stage id="_StageId-N3f57fef8.N663aa110.0.189f52e4de4.N7ffb" name="reply_stage">
+                <con:context/>
+                <con:actions>
+                    <con1:assign varName="varfault" xmlns:con1="http://www.bea.com/wli/sb/stages/transform/config">
+                        <con2:id xmlns:con2="http://www.bea.com/wli/sb/stages/config">_ActionId-N3f57fef8.N663aa110.0.189f52e4de4.N7ff2</con2:id>
+                        <con1:expr>
+                            <con2:xqueryText xmlns:con2="http://www.bea.com/wli/sb/stages/config">$fault</con2:xqueryText>
+                        </con1:expr>
+                    </con1:assign>
+                    <con1:reply isError="true" xmlns:con1="http://www.bea.com/wli/sb/stages/config">
+                        <con1:id>_ActionId-N3f57fef8.N663aa110.0.189f52e4de4.N7ff5</con1:id>
+                    </con1:reply>
+                </con:actions>
+            </con:stage>
+        </con:pipeline>
+        <con:flow>
+            <con:pipeline-node name="Pipeline Pair Node1">
+                <con:request>request-N3f57fef8.N663aa110.0.189f52e4de4.N8000</con:request>
+                <con:response>response-N3f57fef8.N663aa110.0.189f52e4de4.N7fff</con:response>
+            </con:pipeline-node>
+        </con:flow>
+    </con:router>
+</con:pipelineEntry>

@@ -1,0 +1,140 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer 
+  
+  Created: Sat Aug 12 10:39:20 PDT 2023
+  Author:  hp
+  Type: BPEL 2.0 Process
+  Purpose: Synchronous BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="Chunk2" targetNamespace="http://xmlns.oracle.com/ChunkRead2/Project1/Chunk2"
+         xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:client="http://xmlns.oracle.com/ChunkRead2/Project1/Chunk2"
+         xmlns:ora="http://schemas.oracle.com/xpath/extension" xmlns:ui="http://xmlns.oracle.com/soa/designer"
+         xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+         xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:ns1="http://xmlns.oracle.com/pcbpel/adapter/file/ChunkRead2/Project1/fileReference"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+         xmlns:oraext="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.ExtFunc"
+         xmlns:bpm="http://xmlns.oracle.com/bpmn20/extensions"
+         xmlns:xp20="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.Xpath20"
+         xmlns:ess="http://xmlns.oracle.com/scheduler" xmlns:hwf="http://xmlns.oracle.com/bpel/workflow/xpath"
+         xmlns:xref="http://www.oracle.com/XSL/Transform/java/oracle.tip.xref.xpath.XRefXPathFunctions"
+         xmlns:dvm="http://www.oracle.com/XSL/Transform/java/oracle.tip.dvm.LookupValue"
+         xmlns:bpws="http://schemas.xmlsoap.org/ws/2003/03/business-process/"
+         xmlns:xdk="http://schemas.oracle.com/bpel/extension/xpath/function/xdk"
+         xmlns:ids="http://xmlns.oracle.com/bpel/services/IdentityService/xpath"
+         xmlns:ldap="http://schemas.oracle.com/xpath/extension/ldap">
+  <import ui:processWSDL="true" namespace="http://xmlns.oracle.com/ChunkRead2/Project1/Chunk2"
+          location="../WSDLs/Chunk2.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"/>
+  <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        PARTNERLINKS                                                      
+        List of services participating in this BPEL process               
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    -->
+  <partnerLinks>
+    <!-- 
+      The 'client' role represents the requester of this service. It is 
+      used for callback. The location and correlation information associated
+      with the client role are automatically set using WS-Addressing.
+    -->
+    <partnerLink name="chunk2_client" partnerLinkType="client:Chunk2" myRole="Chunk2Provider"/>
+    <partnerLink name="fileReference" partnerLinkType="ns1:ChunkedRead_plt" partnerRole="ChunkedRead_role"/>
+  </partnerLinks>
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      VARIABLES                                                        
+      List of messages and XML documents used within this BPEL process 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <variables>
+    <!-- Reference to the message passed as input during initiation -->
+    <variable name="inputVariable" messageType="client:Chunk2RequestMessage"/>
+    <!-- Reference to the message that will be returned to the requester-->
+    <variable name="outputVariable" messageType="client:Chunk2ResponseMessage"/>
+    <variable name="Invoke1_ChunkedRead_InputVariable" messageType="ns1:Empty_msg"/>
+    <variable name="Invoke1_ChunkedRead_OutputVariable" messageType="ns1:ChunkedRead_msg"/>
+    <variable name="fileName" type="xsd:string"/>
+    <variable name="vartoColumnNo" type="xsd:string"/>
+    <variable name="vartoRownNo" type="xsd:string"/>
+    <variable name="fromVarIsEOF" type="xsd:string"/>
+    <variable name="varfromColumnNo" type="xsd:string"/>
+    <variable name="varfromRownNo" type="xsd:string"/>
+    
+  </variables>
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     ORCHESTRATION LOGIC                                               
+     Set of activities coordinating the flow of messages across the    
+     services integrated within this business process                  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <sequence name="main">
+    <!-- Receive input from requestor. (Note: This maps to operation defined in Chunk2.wsdl) -->
+    <receive name="receiveInput" partnerLink="chunk2_client" portType="client:Chunk2" operation="process"
+             variable="inputVariable" createInstance="yes"/>
+    <assign name="AssignProperties">
+      <copy>
+        <from>$inputVariable.payload/client:input</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$fileName</to>
+      </copy>
+      <copy>
+        <from>'false'</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$fromVarIsEOF</to>
+      </copy>
+      <copy>
+        <from>1</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$vartoColumnNo</to>
+      </copy>
+      <copy>
+        <from>1</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$vartoRownNo</to>
+      </copy>
+    </assign>
+    <while name="While1">
+      <condition>$fromVarIsEOF='false'</condition>
+      <sequence name="Sequence1">
+        <invoke name="Invoke1" partnerLink="fileReference" portType="ns1:ChunkedRead_ptt" operation="ChunkedRead"
+                inputVariable="Invoke1_ChunkedRead_InputVariable" outputVariable="Invoke1_ChunkedRead_OutputVariable"
+                bpelx:invokeAsDetail="no">
+          <bpelx:toProperties>
+            <bpelx:toProperty name="jca.file.FileName" variable="fileName"/>
+            <bpelx:toProperty name="jca.file.LineNumber" variable="vartoColumnNo"/>
+            <bpelx:toProperty name="jca.file.ColumnNumber" variable="vartoRownNo"/>
+          </bpelx:toProperties>
+          <bpelx:fromProperties>
+            <bpelx:fromProperty name="jca.file.IsEOF" variable="fromVarIsEOF"/>
+            <bpelx:fromProperty name="jca.file.LineNumber" variable="varfromColumnNo"/>
+            <bpelx:fromProperty name="jca.file.ColumnNumber" variable="varfromRownNo"/>
+          </bpelx:fromProperties>
+        </invoke>
+        <assign name="AssignLoopProperties">
+          <copy>
+            <from>$varfromColumnNo</from>
+            <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$vartoColumnNo</to>
+          </copy>
+          <copy>
+            <from>$varfromRownNo</from>
+            <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$vartoRownNo</to>
+          </copy>
+          <copy>
+            <from>$fromVarIsEOF</from>
+            <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$fromVarIsEOF</to>
+          </copy>
+        </assign>
+      </sequence>
+    </while>
+    <assign name="AssignSuccess">
+      <copy>
+        <from>'Success'</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.payload/client:result</to>
+      </copy>
+    </assign>
+    <!-- Generate reply to synchronous request -->
+    <reply name="replyOutput" partnerLink="chunk2_client" portType="client:Chunk2" operation="process"
+           variable="outputVariable"/>
+  </sequence>
+</process>
